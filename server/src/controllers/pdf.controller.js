@@ -35,7 +35,15 @@ const uploadPdf = async (req, res) => {
  */
 const addSignatureToPdf = async (req, res) => {
   try {
-    const { fileName, signatureData, signaturePage = 1, positionX = 50, positionY = 10, newFileName } = req.body;
+    const { 
+      fileName, 
+      signatureData, 
+      signaturePage = 1, 
+      positionX = 50, 
+      positionY = 10, 
+      signatureScale = 1.0,
+      newFileName 
+    } = req.body;
 
     if (!fileName || !signatureData) {
       return res.status(400).json({ message: 'File name and signature data are required' });
@@ -65,8 +73,12 @@ const addSignatureToPdf = async (req, res) => {
     
     // Calculate positioning based on percentages
     const { width, height } = targetPage.getSize();
-    const signatureWidth = 200; // Adjust as needed
-    const signatureHeight = 100; // Adjust as needed
+    
+    // Apply scaling factor to signature dimensions
+    const baseSignatureWidth = 200; // Base size
+    const baseSignatureHeight = 100; // Base size
+    const signatureWidth = baseSignatureWidth * signatureScale;
+    const signatureHeight = baseSignatureHeight * signatureScale;
     
     // Convert percentage to coordinates
     // Note: positionY is inverted (0% is bottom, 100% is top)

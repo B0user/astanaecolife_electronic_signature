@@ -177,4 +177,12 @@
     width: 100%;
     justify-content: center;
   }
+}
+
+.scale-indicators {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+  font-size: 12px;
+  color: #666;
 } 

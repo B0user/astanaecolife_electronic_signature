@@ -5,15 +5,21 @@ import './SignatureApp.css';
 import { saveAs } from 'file-saver';
 import PdfViewer from './PdfViewer';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = process.env.NODE_ENV === 'production' 
+  ? '/api'  // This will be proxied by nginx
+  : 'http://localhost:5000/api';
 
 // Default signature position options
 const POSITION_OPTIONS = [
-  { id: 'bottom-center', label: 'Bottom Center', x: 50, y: 10 },
-  { id: 'bottom-right', label: 'Bottom Right', x: 70, y: 10 },
-  { id: 'bottom-left', label: 'Bottom Left', x: 30, y: 10 },
-  { id: 'custom', label: 'Custom Position', x: 50, y: 50 }
+  { id: 'bottom-center', label: 'Внизу по центру', x: 50, y: 10 },
+  { id: 'bottom-right', label: 'Внизу справа', x: 70, y: 10 },
+  { id: 'bottom-left', label: 'Внизу слева', x: 30, y: 10 },
+  { id: 'custom', label: 'Выбрать позицию', x: 50, y: 50 }
 ];
+
+const DEFAULT_SIGNATURE_SCALE = 1.0;
+const MIN_SCALE = 0.5;
+const MAX_SCALE = 2.0;
 
 const SignatureApp = () => {
   const [file, setFile] = useState(null);
@@ -33,6 +39,7 @@ const SignatureApp = () => {
   const [customPositions, setCustomPositions] = useState([]);
   const [showSavePosition, setShowSavePosition] = useState(false);
   const [newPositionName, setNewPositionName] = useState('');
+  const [signatureScale, setSignatureScale] = useState(DEFAULT_SIGNATURE_SCALE);
   
   const sigCanvas = useRef({});
   
@@ -53,20 +60,20 @@ const SignatureApp = () => {
       setSignedPdfUrl('');
     } else {
       setFile(null);
-      setError('Please select a valid PDF file');
+      setError('Пожалуйста, выберите PDF файл');
     }
   };
   
   // Upload the selected PDF file
   const uploadPdf = async () => {
     if (!file) {
-      setError('Please select a PDF file first');
+      setError('Пожалуйста, сначала выберите PDF файл');
       return;
     }
     
     setIsUploading(true);
     setError('');
-    setMessage('Uploading file...');
+    setMessage('Загрузка файла...');
     
     const formData = new FormData();
     formData.append('pdfFile', file);
@@ -78,14 +85,19 @@ const SignatureApp = () => {
         }
       });
       
-      setPdfUrl(`http://localhost:5000${response.data.filePath}`);
+      // Use the full URL to access files in production, or use localhost in development
+      const baseUrl = process.env.NODE_ENV === 'production' 
+        ? ''  // In production, paths are relative to the current origin
+        : 'http://localhost:5000';
+      
+      setPdfUrl(`${baseUrl}${response.data.filePath}`);
       setFileName(response.data.fileName);
       setTotalPages(response.data.pageCount || 1);
       setSignaturePage(response.data.pageCount || 1); // Default to last page
-      setMessage('File uploaded successfully. You can now sign the document.');
+      setMessage('Файл успешно загружен. Теперь вы можете подписать документ.');
     } catch (err) {
-      console.error('Error uploading file:', err);
-      setError(err.response?.data?.message || 'Error uploading file. Please try again.');
+      console.error('Ошибка загрузки файла:', err);
+      setError(err.response?.data?.message || 'Ошибка загрузки файла. Пожалуйста, попробуйте снова.');
     } finally {
       setIsUploading(false);
     }
@@ -117,21 +129,27 @@ const SignatureApp = () => {
     setSignaturePage(page);
   };
   
+  // Handle signature scale change
+  const handleScaleChange = (e) => {
+    const scale = parseFloat(e.target.value);
+    setSignatureScale(scale);
+  };
+  
   // Add signature to the PDF
   const addSignature = async () => {
     if (!fileName) {
-      setError('Please upload a PDF file first');
+      setError('Пожалуйста, сначала загрузите PDF файл');
       return;
     }
     
     if (sigCanvas.current.isEmpty()) {
-      setError('Please provide a signature');
+      setError('Пожалуйста, оставьте подпись');
       return;
     }
     
     setIsSigning(true);
     setError('');
-    setMessage('Adding signature to document...');
+    setMessage('Добавление подписи к документу...');
     
     try {
       // Convert signature to PNG data URL
@@ -150,15 +168,21 @@ const SignatureApp = () => {
         signaturePage,
         positionX: positionToUse.x,
         positionY: positionToUse.y,
+        signatureScale,
         newFileName
       });
       
-      setSignedPdfUrl(`http://localhost:5000${response.data.filePath}`);
-      setMessage('Document signed successfully! You can now download it.');
+      // Use the full URL to access files in production, or use localhost in development
+      const baseUrl = process.env.NODE_ENV === 'production' 
+        ? ''  // In production, paths are relative to the current origin
+        : 'http://localhost:5000';
+      
+      setSignedPdfUrl(`${baseUrl}${response.data.filePath}`);
+      setMessage('Документ успешно подписан! Теперь вы можете скачать его.');
       setSignatureComplete(true);
     } catch (err) {
-      console.error('Error adding signature:', err);
-      setError(err.response?.data?.message || 'Error adding signature. Please try again.');
+      console.error('Ошибка добавления подписи:', err);
+      setError(err.response?.data?.message || 'Ошибка добавления подписи. Пожалуйста, попробуйте снова.');
     } finally {
       setIsSigning(false);
     }
@@ -167,7 +191,7 @@ const SignatureApp = () => {
   // Download the signed PDF
   const downloadSignedPdf = () => {
     if (signedPdfUrl) {
-      saveAs(signedPdfUrl, `signed_document_${Date.now()}.pdf`);
+      saveAs(signedPdfUrl, `подписанный_документ_${Date.now()}.pdf`);
     }
   };
   
@@ -183,6 +207,7 @@ const SignatureApp = () => {
     setSignaturePage(1);
     setSignaturePosition(POSITION_OPTIONS[0]);
     setShowCustomPosition(false);
+    setSignatureScale(DEFAULT_SIGNATURE_SCALE);
     clearSignature();
   };
   
@@ -192,7 +217,7 @@ const SignatureApp = () => {
   // Handle saving custom position
   const handleSavePosition = () => {
     if (!newPositionName.trim()) {
-      setError('Please enter a name for this position');
+      setError('Пожалуйста, введите название для этой позиции');
       return;
     }
 
@@ -200,13 +225,14 @@ const SignatureApp = () => {
       id: `custom-${Date.now()}`,
       label: newPositionName,
       x: customPosition.x,
-      y: customPosition.y
+      y: customPosition.y,
+      scale: signatureScale
     };
 
     setCustomPositions([...customPositions, newPosition]);
     setShowSavePosition(false);
     setNewPositionName('');
-    setMessage('Custom position saved successfully!');
+    setMessage('Пользовательская позиция успешно сохранена!');
   };
 
   // Handle custom position selection
@@ -214,15 +240,19 @@ const SignatureApp = () => {
     setCustomPosition({ x: position.x, y: position.y });
     setSignaturePosition(position);
     setShowCustomPosition(true);
+    // Apply saved scale if available
+    if (position.scale) {
+      setSignatureScale(position.scale);
+    }
   };
   
   return (
     <div className="signature-app">
       <div className="container">
         <div className="card">
-          <h2>Upload Contract</h2>
+          <h2>Загрузка Контракта</h2>
           <div className="form-group">
-            <label htmlFor="pdf-upload">Select PDF contract to sign:</label>
+            <label htmlFor="pdf-upload">Выберите PDF контракт для подписи:</label>
             <input
               type="file"
               id="pdf-upload"
@@ -239,13 +269,13 @@ const SignatureApp = () => {
               onClick={uploadPdf} 
               disabled={isUploading}
             >
-              {isUploading ? 'Uploading...' : 'Upload Contract'}
+              {isUploading ? 'Загрузка...' : 'Загрузить Контракт'}
             </button>
           )}
           
           {pdfUrl && !signatureComplete && (
             <button className="button secondary" onClick={handleReset}>
-              Upload a Different Contract
+              Загрузить Другой Контракт
             </button>
           )}
         </div>
@@ -253,15 +283,15 @@ const SignatureApp = () => {
         {pdfUrl && (
           <>
             <div className="card">
-              <h2>Preview Document</h2>
+              <h2>Предварительный Просмотр</h2>
               <div className="pdf-container">
                 <PdfViewer pdfUrl={pdfUrl} />
               </div>
             </div>
             
             <div className="card">
-              <h2>Sign Document</h2>
-              <p>Please sign in the area below:</p>
+              <h2>Подписать Документ</h2>
+              <p>Пожалуйста, оставьте подпись в области ниже:</p>
               
               <div className="signature-container">
                 <SignatureCanvas
@@ -277,15 +307,15 @@ const SignatureApp = () => {
               
               <div className="button-group">
                 <button className="button secondary" onClick={clearSignature}>
-                  Clear Signature
+                  Очистить Подпись
                 </button>
               </div>
               
               <div className="signature-position-container">
-                <h3>Signature Placement</h3>
+                <h3>Размещение Подписи</h3>
                 
                 <div className="form-group">
-                  <label htmlFor="signature-page">Page to sign:</label>
+                  <label htmlFor="signature-page">Страница для подписи:</label>
                   <select 
                     id="signature-page" 
                     className="form-control"
@@ -294,14 +324,14 @@ const SignatureApp = () => {
                   >
                     {pageOptions.map(page => (
                       <option key={page} value={page}>
-                        Page {page} {page === totalPages ? '(Last Page)' : ''}
+                        Страница {page} {page === totalPages ? '(Последняя Страница)' : ''}
                       </option>
                     ))}
                   </select>
                 </div>
                 
                 <div className="form-group">
-                  <label htmlFor="signature-position">Signature Position:</label>
+                  <label htmlFor="signature-position">Позиция подписи:</label>
                   <select 
                     id="signature-position" 
                     className="form-control"
@@ -319,7 +349,7 @@ const SignatureApp = () => {
                 {showCustomPosition && (
                   <div className="custom-position-controls">
                     <div className="form-group">
-                      <label htmlFor="position-x">Horizontal Position (0-100%):</label>
+                      <label htmlFor="position-x">Горизонтальная позиция (0-100%):</label>
                       <input
                         type="range"
                         id="position-x"
@@ -333,7 +363,7 @@ const SignatureApp = () => {
                     </div>
                     
                     <div className="form-group">
-                      <label htmlFor="position-y">Vertical Position (0-100%):</label>
+                      <label htmlFor="position-y">Вертикальная позиция (0-100%):</label>
                       <input
                         type="range"
                         id="position-y"
@@ -344,7 +374,25 @@ const SignatureApp = () => {
                         className="form-control range"
                       />
                       <span>{customPosition.y}%</span>
-                      <p className="position-note">Note: 0% is at the bottom of the page, 100% is at the top</p>
+                      <p className="position-note">Примечание: 0% - это внизу страницы, 100% - вверху</p>
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="signature-scale">Размер подписи ({(signatureScale * 100).toFixed(0)}%):</label>
+                      <input
+                        type="range"
+                        id="signature-scale"
+                        min={MIN_SCALE}
+                        max={MAX_SCALE}
+                        step="0.1"
+                        value={signatureScale}
+                        onChange={handleScaleChange}
+                        className="form-control range"
+                      />
+                      <div className="scale-indicators">
+                        <span>Меньше</span>
+                        <span>Больше</span>
+                      </div>
                     </div>
 
                     {!showSavePosition ? (
@@ -352,19 +400,19 @@ const SignatureApp = () => {
                         className="button secondary" 
                         onClick={() => setShowSavePosition(true)}
                       >
-                        Save as Custom Position
+                        Сохранить Позицию
                       </button>
                     ) : (
                       <div className="save-position-form">
                         <div className="form-group">
-                          <label htmlFor="position-name">Position Name:</label>
+                          <label htmlFor="position-name">Название позиции:</label>
                           <input
                             type="text"
                             id="position-name"
                             className="form-control"
                             value={newPositionName}
                             onChange={(e) => setNewPositionName(e.target.value)}
-                            placeholder="Enter a name for this position"
+                            placeholder="Введите название для этой позиции"
                           />
                         </div>
                         <div className="button-group">
@@ -373,7 +421,7 @@ const SignatureApp = () => {
                             onClick={handleSavePosition}
                             disabled={!newPositionName.trim()}
                           >
-                            Save Position
+                            Сохранить
                           </button>
                           <button 
                             className="button secondary" 
@@ -382,7 +430,7 @@ const SignatureApp = () => {
                               setNewPositionName('');
                             }}
                           >
-                            Cancel
+                            Отмена
                           </button>
                         </div>
                       </div>
@@ -392,7 +440,7 @@ const SignatureApp = () => {
 
                 {customPositions.length > 0 && (
                   <div className="saved-positions">
-                    <h4>Saved Custom Positions</h4>
+                    <h4>Сохраненные Позиции</h4>
                     <div className="saved-positions-grid">
                       {customPositions.map(position => (
                         <div key={position.id} className="saved-position-item">
@@ -402,7 +450,7 @@ const SignatureApp = () => {
                               className="button small"
                               onClick={() => handleCustomPositionSelect(position)}
                             >
-                              Use
+                              Использовать
                             </button>
                             <button 
                               className="button small danger"
@@ -410,7 +458,7 @@ const SignatureApp = () => {
                                 prev.filter(p => p.id !== position.id)
                               )}
                             >
-                              Delete
+                              Удалить
                             </button>
                           </div>
                         </div>
@@ -424,7 +472,7 @@ const SignatureApp = () => {
                   onClick={addSignature}
                   disabled={isSigning}
                 >
-                  {isSigning ? 'Processing...' : 'Apply Signature to Document'}
+                  {isSigning ? 'Обработка...' : 'Применить Подпись к Документу'}
                 </button>
               </div>
             </div>
@@ -433,16 +481,16 @@ const SignatureApp = () => {
         
         {signatureComplete && (
           <div className="card">
-            <h2>Signed Document</h2>
-            <p>Your document has been signed successfully!</p>
+            <h2>Подписанный Документ</h2>
+            <p>Ваш документ успешно подписан!</p>
             <div className="pdf-container">
               <PdfViewer pdfUrl={signedPdfUrl} />
             </div>
             <button className="button success" onClick={downloadSignedPdf}>
-              Download Signed Document
+              Скачать Подписанный Документ
             </button>
             <button className="button secondary" onClick={handleReset}>
-              Sign Another Document
+              Подписать Другой Документ
             </button>
           </div>
         )}

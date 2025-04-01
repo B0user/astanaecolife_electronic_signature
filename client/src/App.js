@@ -6,13 +6,13 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Electronic Signature System</h1>
+        <h1>Система Электронной Графической Подписи</h1>
       </header>
       <main>
         <SignatureApp />
       </main>
       <footer>
-        <p>&copy; {new Date().getFullYear()} Electronic Signature System</p>
+        <p>MEDCORE DEVELOPMENT GROUP &copy; {new Date().getFullYear()}</p>
       </footer>
     </div>
   );
