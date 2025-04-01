@@ -1,0 +1,24 @@
+{
+  "name": "electronic-signature-system",
+  "version": "1.0.0",
+  "description": "Web-based electronic signature system for signing documents",
+  "main": "index.js",
+  "scripts": {
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "npm run dev --prefix server",
+    "client": "npm start --prefix client",
+    "install-all": "npm install && npm install --prefix server && npm install --prefix client",
+    "build": "npm run build --prefix client"
+  },
+  "keywords": [
+    "pdf",
+    "signature",
+    "electronic",
+    "document"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "concurrently": "^8.0.1"
+  }
+} 

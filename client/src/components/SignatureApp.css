@@ -1,0 +1,180 @@
+.signature-app {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.container {
+  padding: 20px;
+}
+
+.signature-container {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.signature-canvas {
+  border: 1px dashed #3498db;
+  border-radius: 4px;
+  background-color: #fff;
+  touch-action: none;
+}
+
+.button-group {
+  display: flex;
+  justify-content: center;
+  margin-top: 15px;
+}
+
+.pdf-container {
+  margin: 20px 0;
+}
+
+.message {
+  padding: 15px;
+  margin: 20px 0;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.message.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* Signature position controls */
+.signature-position-container {
+  margin-top: 30px;
+  padding: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.signature-position-container h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #333;
+  font-size: 18px;
+}
+
+.custom-position-controls {
+  margin-top: 15px;
+  padding: 15px;
+  border: 1px dashed #ccc;
+  border-radius: 4px;
+  background-color: #f5f5f5;
+}
+
+.form-control.range {
+  display: inline-block;
+  width: 70%;
+  margin-right: 10px;
+}
+
+.position-note {
+  margin-top: 5px;
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+}
+
+.save-position-form {
+  margin-top: 15px;
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background-color: #fff;
+}
+
+.saved-positions {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.saved-positions h4 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.saved-positions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.saved-position-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+}
+
+.saved-position-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.button.small {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.button.danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+.button.danger:hover {
+  background-color: #c82333;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .signature-canvas {
+    width: 100% !important;
+    height: 150px !important;
+  }
+  
+  .button-group {
+    flex-direction: column;
+  }
+  
+  .button {
+    margin: 5px 0;
+  }
+  
+  .form-control.range {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 5px;
+  }
+  
+  .saved-positions-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .saved-position-item {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+  
+  .saved-position-actions {
+    width: 100%;
+    justify-content: center;
+  }
+} 
