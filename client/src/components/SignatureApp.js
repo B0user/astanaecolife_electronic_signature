@@ -6,8 +6,8 @@ import { saveAs } from 'file-saver';
 import PdfViewer from './PdfViewer';
 
 const API_URL = process.env.NODE_ENV === 'production' 
-  ? '/api'  // This will be proxied by nginx
-  : 'http://localhost:5000/api';
+  ? 'https://srv.egs.demo.medcore.kz/api'  // Production server
+  : 'http://localhost:5000/api';  // Development server
 
 // Default signature position options
 const POSITION_OPTIONS = [
@@ -87,8 +87,8 @@ const SignatureApp = () => {
       
       // Use the full URL to access files in production, or use localhost in development
       const baseUrl = process.env.NODE_ENV === 'production' 
-        ? ''  // In production, paths are relative to the current origin
-        : 'http://localhost:5000';
+        ? 'https://srv.egs.demo.medcore.kz'  // Production server
+        : 'http://localhost:5000';  // Development server
       
       setPdfUrl(`${baseUrl}${response.data.filePath}`);
       setFileName(response.data.fileName);
@@ -174,8 +174,8 @@ const SignatureApp = () => {
       
       // Use the full URL to access files in production, or use localhost in development
       const baseUrl = process.env.NODE_ENV === 'production' 
-        ? ''  // In production, paths are relative to the current origin
-        : 'http://localhost:5000';
+        ? 'https://srv.egs.demo.medcore.kz'  // Production server
+        : 'http://localhost:5000';  // Development server
       
       setSignedPdfUrl(`${baseUrl}${response.data.filePath}`);
       setMessage('Документ успешно подписан! Теперь вы можете скачать его.');
